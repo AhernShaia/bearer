@@ -1,0 +1,88 @@
+#!/bin/bash
+
+if [ -z "$1" ]
+  then
+    echo "inert -a ssh/drbd/nfs/nfs-client/docker/k8s/gocd"
+    exit
+fi
+
+while getopts "a:" opt; do
+  case $opt in
+    a) app+=("$OPTARG");;
+    *) echo 'inert -a ssh/drbd/nfs/nfs-client/docker/k8s/gocd' && exit 0 ;;
+  esac
+done
+shift $((OPTIND -1))
+
+
+sshInit(){
+  key=/root/.ssh/id_rsa
+  if [ ! -f "$key" ]; then
+    ssh-keygen -q -t rsa -N '' -f "$HOME/.ssh/id_rsa"
+  fi
+  python3 /var/inert/air/ssh.py
+  bash /var/inert/scripts/key_exchange.sh
+}
+
+drbdInit(){
+  bash /var/inert/scripts/gen_r0_res.sh
+  python3 /var/inert/air/drbd.py
+  ansible-playbook -i /var/inert/inventory/drbd.yaml /var/inert/ansible/lvm.yml
+  ansible-playbook -i /var/inert/inventory/drbd.yaml /var/inert/ansible/drbd.yml
+}
+
+nfsInit(){
+  bash /var/inert/scripts/nfs_set.sh
+  python3 /var/inert/air/nfs.py
+  ansible-playbook -i /var/inert/inventory/nfs.yaml /var/inert/ansible/nfs.yml
+}
+
+nfsClient(){
+  python3 /var/inert/air/nfs-client.py 
+  ansible-playbook -i /var/inert/inventory/nfs-client.yaml /var/inert/ansible/nfs-client.yml
+}
+
+docker(){
+  python3 /var/inert/air/docker.py
+  ansible-playbook -i /var/inert/inventory/docker.yaml /var/inert/ansible/docker.yml
+}
+
+k8s(){
+  bash /var/inert/scripts/gen_k8s_yaml.sh
+  bash /var/inert/scripts/gen_cluster_yaml.sh
+  ansible-playbook -i /var/inert/inventory/k8s.yaml /var/inert/ansible/k8s.yml
+  rke up --ignore-docker-version --config /var/inert/conf/cluster.yaml
+  cp /var/inert/conf/kube_config_cluster.yaml /root/.kube/config
+}
+
+gocd(){
+  python3 /var/inert/air/gocd.py
+  ansible-playbook -i /var/inert/inventory/gocd.yaml /var/inert/ansible/gocd.yml
+}
+
+for a in "${app[@]}"; do
+  case $a in
+    ssh)
+      sshInit
+      ;;
+    drbd)
+      drbdInit
+      ;;
+    nfs)
+      nfsInit
+      ;;
+    nfs-client)
+      nfsClient
+      ;;
+    docker)
+      docker
+      ;;
+    k8s)
+      k8s
+      ;;
+    gocd)
+      gocd
+      ;;
+  esac
+done
+
