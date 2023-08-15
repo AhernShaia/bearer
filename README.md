@@ -8,18 +8,19 @@
     -- GoCD
 ---
 ## 使用步驟
-### 1. Inert安裝
-    1. git clone專案
+1. git clone專案
     ```bash
         cd $HOME
-        git clone https://github.com/argonmist/inert.git
+        git clone 
     ```
-    2. 安裝docker
+
+2. 安裝docker
     ```bash
         bash inert/ubuntu22/scripts/docker_install.sh
     ```
-    3. 設定cmd
+
+3. 設定cmd
     ```bash
         sudo cp inert/ubuntu22/bin/inert-local /bin/inert
     ```
-    4. 啟動inert，第一次執行時會構建image，構建完後，只要輸入`inert`就會進入操作環境。
+4. 啟動inert，第一次執行時會構建image，構建完後，只要輸入`inert`就會進入操作環境。
