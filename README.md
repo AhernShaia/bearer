@@ -1,11 +1,11 @@
 # inert
 透過Ansible快速搭建環境,通過`ansible/group_vars/all.yaml`聲明對應服務和目標機器IP。
 - 可以安裝哪些服務：
-    -- docker
-    -- k8s
-    -- nfs
-    -- drdb
-    -- GoCD
+-- docker
+-- k8s
+-- nfs
+-- drdb
+-- GoCD
 ---
 ## 使用步驟
 1. git clone專案
